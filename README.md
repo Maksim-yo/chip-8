@@ -2,7 +2,7 @@
 
 This is an a chip-8 emulator, which have 35 instructions.
 
-#Run
+# Run
 
 To run an emulator:
 
@@ -11,3 +11,4 @@ main.exe -p [path]
 ```
 
 
+	
