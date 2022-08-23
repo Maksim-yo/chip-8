@@ -372,7 +372,7 @@ uint16_t parse() {
 
 	 }
 
-	 parser(435);
+	 parser(instr);
 	 return 1;
 
 }
@@ -380,14 +380,13 @@ uint16_t parse() {
 
 void parser(uint16_t instr) {
 
-	sprintf(cur_instr, "%x", instr);
-
+	sprintf(cur_instr, "%x", instr); // instr in hex
 
 	if (hex(cur_instr)) {
 
 			uint8_t len = strlen(cur_instr);
 			memset(cur_instr, '0', 7);
-			sprintf(cur_instr, "0x%0*x%x", 4-len, 0, instr);
+			sprintf(cur_instr, "0x%0*x%x", 4-len, 0, instr); // complete for 4 symbols cause all instr 4 byte
 	
 	}
 
@@ -396,7 +395,7 @@ void parser(uint16_t instr) {
 	uint8_t x = str_to_enum(reg);
 	reg = (instr >> 4) & 0xF;
 	uint8_t y = str_to_enum(reg);
-	
+	 
 	switch (instr) {
 
 	case 0x00e0:				// CLEAR THE SCREEEN 
