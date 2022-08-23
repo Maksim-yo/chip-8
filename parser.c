@@ -135,7 +135,6 @@ void stack_push(){
 
 	}
 
-	*temp = (stack_frame){ .ret_addr = 7 };
 }
 
 void init_mem() {
@@ -221,7 +220,6 @@ void testing_paint() {
 }
 
 void testing_stack() {
-
 
 	stack_push();
 	stack_push();
@@ -506,7 +504,7 @@ void parse(uint16_t instr) {
 
 
 		uint8_t n = instr & 0xF;
-		paint_surf(x, y);
+		paint_surf(x, y, n);
 
 
 	}

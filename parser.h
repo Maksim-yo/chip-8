@@ -19,13 +19,15 @@ typedef struct {
 
 
 
-typedef struct {
+struct stack_frame{
 	uint16_t params[7];
 	uint16_t ret_addr;
 	uint16_t locals[7];
-	stack_frame* next;
-	stack_frame* prev;
-} stack_frame;
+	struct stack_frame* next;
+	struct stack_frame* prev;
+};
+
+typedef struct stack_frame stack_frame;
 
 enum KEYBOARDS_KEYS {
 
@@ -133,5 +135,7 @@ uint16_t check_key();
 void init_mem();
 void testing_paint();
 void testing_stack();
+
 extern uint16_t data[SIZE_MEM];
+extern uint16_t registers[R_COUNT];
 #endif

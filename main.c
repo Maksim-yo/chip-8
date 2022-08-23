@@ -85,14 +85,14 @@ void close() {
 
 }
 
-void paint_surf(int x, int y) {
+void paint_surf(int x, int y, int n) {
 
 	SDL_Rect rect;
 	rect.w = 40;
 	rect.h = 50;
 	rect.x = x;
 	rect.y = y;
-	SDL_RenderCopy(gRenderer, fonts[x], NULL, &rect);
+	SDL_RenderCopy(gRenderer, (SDL_Texture*)registers[I], NULL, &rect);
 
 }
 
