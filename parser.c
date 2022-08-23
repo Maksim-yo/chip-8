@@ -88,9 +88,45 @@ uint16_t keys[16] = { '0','1','2','3','4','5','6','7','8','9','a','b','c','d','e
 uint16_t memory[SIZE_MEM];
 uint16_t data[SIZE_MEM];
 stack_frame* head = NULL;
+stack_frame* cur_stack = NULL;
 SDL_Texture* fonts[16];
+char cur_instr[7];
+
+void stack_init(stack_frame* frame) {
+
+	for (int i = 0; i < PARAMS; ++i) {
+
+		frame->params[i] = NULL;
+
+	}
+
+	for (int i = 0; i < LOCALS; ++i) {
+
+		frame->locals[i] = NULL;
+
+	}
+
+	frame->next = NULL;
+	frame->prev = NULL;
+	frame->ret_addr = NULL;
+
+}
 
 
+
+stack_frame* stack_malloc(const char* text) {
+
+	stack_frame* temp = malloc(sizeof(stack_frame));
+	stack_init(temp);
+
+	if (temp == 0) {
+
+		fprintf(stderr, "ERROR: %s couldn't do push op", text);
+		exit(-1);
+	}
+	return temp;
+
+}
 
 void stack_push(){
 	
@@ -99,14 +135,16 @@ void stack_push(){
 
 	if (head == NULL) {
 
-		head = malloc(sizeof(stack_frame));
+		head = stack_malloc("head");
 		
 		if (head == 0) {
 
 			fprintf(stderr, "ERROR: stack_push couldn't do push op");
 			exit(-1);
 		}
+		
 		temp = head;
+		cur_stack = temp;
 	}
 
 	else {
@@ -115,27 +153,49 @@ void stack_push(){
 
 		while (temp->next != NULL){
 			
-			tmp = temp;
+			//tmp = temp;
 			temp = temp->next;
-			temp->prev = tmp;
+			//temp->prev = tmp;
 
 		}
 
 		// NOW temp->next eq to null, so allocate memory for new stack frame
-		tmp = temp;
-		temp->next = malloc(sizeof(stack_frame));
-		//((stack_frame*)(temp->next))->prev = tmp;
-		if (temp->next == 0) {
-
-			fprintf(stderr, "ERROR: stack_next couldn't be allocate");
-			exit(-1);
-
-		}
+		temp->next = stack_malloc("next");
+		temp->next->prev = stack_malloc("prev"); // maybe redundant mem
+		temp->next->prev = temp;
+		cur_stack = temp->next;
 		printf("frame was created successfuly");
 
 	}
 
-	*temp = (stack_frame){ .ret_addr = 7 };
+}
+
+uint16_t stack_return() {
+
+	uint16_t addr = cur_stack->ret_addr;
+
+	if (cur_stack->prev == NULL) {
+
+		return addr;
+
+	}
+
+	stack_frame* frame = cur_stack->prev;
+	free(cur_stack);
+	cur_stack = frame;
+	return addr;
+
+}
+
+void testing_stack() {
+
+	stack_push();
+	stack_push();
+	stack_push();
+	stack_return();
+	stack_return();
+	stack_return();
+	
 }
 
 void init_mem() {
@@ -158,12 +218,12 @@ void pretiffy(uint16_t val) {
 
 }
 
-uint8_t check_path(uint8_t argc, const char* argv[]) {
+uint8_t check_path(uint8_t argc, const char* path) {
 
 	FILE* file;	
 	if (argc >= 2) {
 
-		if (file = fopen(argv[1], "r")) {
+		if (file = fopen(path, "r")) {
 
 			fclose(file);
 			return 1;
@@ -182,7 +242,7 @@ void load_data(const char* path) {
 
 	if (feof(fp))
 
-		printf("End of file.\n");
+		printf("File was loaded successufly.\n");
 
 	else {
 
@@ -207,7 +267,7 @@ void read_data(const char* path, uint8_t argc) {
 
 		fprintf(stderr, "ERROR: File couldn'n read\n\t::: main.c [filepath]");
 		exit(-1);
-
+	
 	}
 	
 	load_data(path);
@@ -220,16 +280,16 @@ void testing_paint() {
 
 }
 
-void testing_stack() {
 
 
-	stack_push();
-	stack_push();
-	stack_push();
-	*head = (stack_frame){ .ret_addr = 6 };
-
-}
 REGISTERS str_to_enum(const char* str) {
+
+
+	if (str == NULL) {
+
+		fprintf(stderr, "ERROR: str_to_enum func get incorret args");
+		exit(-1);
+	}
 
 	for (int8_t i = 0; i < sizeof(conversion) / sizeof(conversion[0]);++i) {
 
@@ -257,9 +317,7 @@ void malloc_timers(timer* tmr, const char* str) {
 
 		fprintf(stderr, "ERROR: %s couldn't allocate with malloc", str);
 		exit(-1);
-
 	}
-	
 
 }
 
@@ -303,14 +361,41 @@ void hz_timer() {
 
 }
 
-void parse(uint16_t instr) {
+uint16_t parse() {
+
+	 uint16_t instr = data[++registers[PC]];
+
+	 if (instr == 0) {
+		
+		 printf("ALL INSTR ENDED");
+		 return 0;
+
+	 }
+
+	 parser(instr);
+	 return 1;
+
+}
+
+
+void parser(uint16_t instr) {
+
+	sprintf(cur_instr, "%x", instr); // instr in hex
+
+	if (hex(cur_instr)) {
+
+			uint8_t len = strlen(cur_instr);
+			memset(cur_instr, '0', 7);
+			sprintf(cur_instr, "0x%0*x%x", 4-len, 0, instr); // complete for 4 symbols cause all instr 4 byte
+	
+	}
 
 	uint16_t f_byte = (instr >> 12) & 0xF;
 	uint8_t reg = (instr >> 8) & 0xF;
 	uint8_t x = str_to_enum(reg);
 	reg = (instr >> 4) & 0xF;
 	uint8_t y = str_to_enum(reg);
-	
+	 
 	switch (instr) {
 
 	case 0x00e0:				// CLEAR THE SCREEEN 
@@ -346,6 +431,8 @@ void parse(uint16_t instr) {
 
 		uint16_t mem = instr & 0xFFF;
 		//registers[BP] = registers[PC];
+		stack_push();
+		cur_stack->ret_addr = registers[PC];
 		registers[PC] = mem;
 
 	}
@@ -436,15 +523,14 @@ void parse(uint16_t instr) {
 			reg_overflow(x);
 			// CHECKING FOR A CARRY BIT
 			// NEED TO CHANGE 
-			registers[VF] = ((temp >> 7) & 1) & ((registers[x] >> 7) & 0);
+			registers[VF] =  (registers[x] >> 8) & 1;
 
 		}
 			break;
 		case 0x5: {
 
-
-
-
+			registers[x] -= registers[y];
+			registers[VF] = !(registers[y] > registers[x]); // (registers[x] >> 8) & 1
 
 		}
 			break;
@@ -455,7 +541,12 @@ void parse(uint16_t instr) {
 
 		}
 			break;
-		case 0x7: 
+		case 0x7: {
+
+			registers[x] = registers[y] - registers[x];
+			registers[VF] = !(registers[x] > registers[y]);
+
+		}
 			break;
 		case 0xe: {
 
@@ -504,10 +595,8 @@ void parse(uint16_t instr) {
 		break;
 	case 0xd: {
 
-
 		uint8_t n = instr & 0xF;
-		paint_surf(x, y);
-
+		paint_surf(x, y, n);
 
 	}
 		break;
@@ -531,13 +620,9 @@ void parse(uint16_t instr) {
 			break;
 		case 0xa1: {
 
-
-
 			if (check_key()) {
 
-
 				registers[PC] += getchar() != registers[x];
-
 
 			}
 
@@ -549,10 +634,10 @@ void parse(uint16_t instr) {
 			
 			}
 		}
+
 	case 0xf: {
 
 		uint8_t l_byte = instr & 0xFF;
-
 
 		switch (l_byte) {
 
@@ -595,8 +680,6 @@ void parse(uint16_t instr) {
 
 				if (registers[x] == conversion[i].str[1]) {
 
-
-					// guessing incorrect; 
 					registers[I] = fonts[i];
 
 				}
@@ -624,33 +707,27 @@ void parse(uint16_t instr) {
 
 			}
 
-
 		}
 			break;
 		case 0x65: {
-
 
 			uint8_t range = x + 1;
 
 			for (uint8_t i = 0; i < range; i++) {
 
-
 				registers[i] = memory[registers[I]];
 				registers[I] += x + 1;
 
-
 			}
-
 
 		}
 			break;
 		default:
 
-
+			fprintf(stderr, "No such instruction: %s", instr);
 			break;
 
 			}
-			
 		}
 	}
 

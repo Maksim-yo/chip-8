@@ -20,7 +20,7 @@ SDL_Surface* loadedSurface = NULL;
 int SDL_SCREEN_WIDTH = 640;
 int SDL_SCREEN_HEIGHT = 320;
 SDL_Texture* fonts[16];
-uint16_t addr = 0;
+uint16_t addr = -1;
 
 bool quit = false;
 SDL_Event e;
@@ -85,14 +85,14 @@ void close() {
 
 }
 
-void paint_surf(int x, int y) {
+void paint_surf(int x, int y, int n) {
 
 	SDL_Rect rect;
 	rect.w = 40;
 	rect.h = 50;
 	rect.x = x;
 	rect.y = y;
-	SDL_RenderCopy(gRenderer, fonts[x], NULL, &rect);
+	SDL_RenderCopy(gRenderer, (SDL_Texture*)registers[I], NULL, &rect);
 
 }
 
@@ -174,17 +174,18 @@ int main(int argc, char* argv[]) {
 	if (init() != 0)
 		exit(-1);
 
+	int a = convert_to_hex('d');
+	int b = convert_to_hex('a');
+	b = (b * 16) + a;
+	printf("%02x \n", b);
 	//read_data(argv[1], argc);
-
-	testing_stack();
-	testing_paint();
-	paint_surf1(5);
-	
+	read_data("D:\\code\\c++\\proj\\chip8\\data\\cavern.ch8", 2);
+	registers[PC] = 0;
 	while (!quit) {
 
-		while (data[addr] != 0)
+		while (parse() != 0)
 
-			parse(instr());
+			
 
 		while ((SDL_PollEvent(&e)) != 0) {
 

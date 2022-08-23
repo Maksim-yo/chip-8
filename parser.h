@@ -8,6 +8,8 @@
 #define SIZE_MEM 65556
 #define ERR 111
 #define FONTS 16
+#define PARAMS 7
+#define LOCALS 7
 //BIG INDIAN
 // Each reg is a 8 bit but I reg is a 12 bit
 //uint16_t I = 0;		// ADDRESS REGISTER
@@ -19,13 +21,15 @@ typedef struct {
 
 
 
-typedef struct {
-	uint16_t params[7];
+struct stack_frame{
+	uint16_t params[PARAMS];
+	uint16_t locals[LOCALS];
 	uint16_t ret_addr;
-	uint16_t locals[7];
-	stack_frame* next;
-	stack_frame* prev;
-} stack_frame;
+	struct stack_frame* next;
+	struct stack_frame* prev;
+};
+
+typedef struct stack_frame stack_frame;
 
 enum KEYBOARDS_KEYS {
 
@@ -121,7 +125,8 @@ const static struct {
 };
 
 void read_data(const char* path, uint8_t argc);
-void parse(uint16_t instr);
+void parser(uint16_t instr);
+uint16_t parse();
 void hz_timer();
 void init_timers();
 void reg_overflow(REGISTERS reg);
@@ -132,6 +137,13 @@ void pretiffy(uint16_t val);
 uint16_t check_key();
 void init_mem();
 void testing_paint();
+
+//stack
 void testing_stack();
+stack_frame* stack_malloc(const char* text);
+void stack_push();
+uint16_t stack_return();
+
 extern uint16_t data[SIZE_MEM];
+extern uint16_t registers[R_COUNT];
 #endif
