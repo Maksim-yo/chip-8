@@ -20,7 +20,7 @@ SDL_Surface* loadedSurface = NULL;
 int SDL_SCREEN_WIDTH = 640;
 int SDL_SCREEN_HEIGHT = 320;
 SDL_Texture* fonts[16];
-uint16_t addr = 0;
+uint16_t addr = -1;
 
 bool quit = false;
 SDL_Event e;
@@ -175,10 +175,7 @@ int main(int argc, char* argv[]) {
 		exit(-1);
 
 	//read_data(argv[1], argc);
-
-	testing_stack();
-	testing_paint();
-	paint_surf1(5);
+	read_data("D:\\code\\c++\\proj\\chip8\\data\\cavern.ch8", 2);
 	
 	while (!quit) {
 
