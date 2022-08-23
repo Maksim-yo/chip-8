@@ -19,4 +19,7 @@
 uint16_t xor (uint16_t val1, uint16_t val2);
 uint16_t little_to_big(uint16_t val);
 uint16_t random_gen();
+uint16_t convert_to_hex(char num);
+bool hex(char* str);
+
 #endif

@@ -174,14 +174,18 @@ int main(int argc, char* argv[]) {
 	if (init() != 0)
 		exit(-1);
 
+	int a = convert_to_hex('d');
+	int b = convert_to_hex('a');
+	b = (b * 16) + a;
+	printf("%02x \n", b);
 	//read_data(argv[1], argc);
 	read_data("D:\\code\\c++\\proj\\chip8\\data\\cavern.ch8", 2);
-	
+	registers[PC] = 0;
 	while (!quit) {
 
-		while (data[addr] != 0)
+		while (parse() != 0)
 
-			parse(instr());
+			
 
 		while ((SDL_PollEvent(&e)) != 0) {
 

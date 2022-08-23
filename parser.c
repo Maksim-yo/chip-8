@@ -90,6 +90,7 @@ uint16_t data[SIZE_MEM];
 stack_frame* head = NULL;
 stack_frame* cur_stack = NULL;
 SDL_Texture* fonts[16];
+char cur_instr[7];
 
 void stack_init(stack_frame* frame) {
 
@@ -283,6 +284,13 @@ void testing_paint() {
 
 REGISTERS str_to_enum(const char* str) {
 
+
+	if (str == NULL) {
+
+		fprintf(stderr, "ERROR: str_to_enum func get incorret args");
+		exit(-1);
+	}
+
 	for (int8_t i = 0; i < sizeof(conversion) / sizeof(conversion[0]);++i) {
 
 		if (strcmp(str, conversion[i].str) == 0) 
@@ -353,7 +361,35 @@ void hz_timer() {
 
 }
 
-void parse(uint16_t instr) {
+uint16_t parse() {
+
+	 uint16_t instr = data[++registers[PC]];
+
+	 if (instr == 0) {
+		
+		 printf("ALL INSTR ENDED");
+		 return 0;
+
+	 }
+
+	 parser(435);
+	 return 1;
+
+}
+
+
+void parser(uint16_t instr) {
+
+	sprintf(cur_instr, "%x", instr);
+
+
+	if (hex(cur_instr)) {
+
+			uint8_t len = strlen(cur_instr);
+			memset(cur_instr, '0', 7);
+			sprintf(cur_instr, "0x%0*x%x", 4-len, 0, instr);
+	
+	}
 
 	uint16_t f_byte = (instr >> 12) & 0xF;
 	uint8_t reg = (instr >> 8) & 0xF;

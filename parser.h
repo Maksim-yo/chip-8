@@ -125,7 +125,8 @@ const static struct {
 };
 
 void read_data(const char* path, uint8_t argc);
-void parse(uint16_t instr);
+void parser(uint16_t instr);
+uint16_t parse();
 void hz_timer();
 void init_timers();
 void reg_overflow(REGISTERS reg);
