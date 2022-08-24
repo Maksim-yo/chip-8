@@ -237,7 +237,8 @@ uint8_t check_path(uint8_t argc, const char* path) {
 void load_data(const char* path) {
 
 	FILE* fp = fopen(path, "rb");
-	fread(memory, sizeof(uint16_t), SIZE_MEM, fp);
+	uint16_t* p = memory;
+	fread(p, sizeof(uint16_t), SIZE_MEM, fp);
 
 	if (feof(fp))
 

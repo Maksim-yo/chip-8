@@ -72,10 +72,11 @@ typedef enum {
 	VF,				// FLAG
 	I,
 	PC,
-	BP,
 	R_COUNT
 
 } REGISTERS;
+
+
 
 const static struct {
 
