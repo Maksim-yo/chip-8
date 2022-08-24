@@ -64,7 +64,6 @@
 #include "parser.h"
 #include <SDL_thread.h>
 #include "graphics.h"
-
 /*
 TODO :
 	GRAPHICS
@@ -238,7 +237,8 @@ uint8_t check_path(uint8_t argc, const char* path) {
 void load_data(const char* path) {
 
 	FILE* fp = fopen(path, "rb");
-	fread(data, sizeof(uint16_t), SIZE_MEM, fp);
+	uint16_t* p = memory;
+	fread(p, sizeof(uint16_t), SIZE_MEM, fp);
 
 	if (feof(fp))
 
@@ -259,7 +259,7 @@ void read_data(const char* path, uint8_t argc) {
 
 	for (int i = 0; i < SIZE_MEM; ++i) {
 
-		data[i] = 0000;
+		memory[i] = 0000;
 
 	}
 	
@@ -282,8 +282,11 @@ void testing_paint() {
 
 
 
-REGISTERS str_to_enum(const char* str) {
+REGISTERS str_to_enum(uint16_t num) {
 
+	char str[4];
+	unsigned int len = sprintf(str, "V%x", num);
+	str[1] = toupper(str[1]);
 
 	if (str == NULL) {
 
@@ -363,7 +366,7 @@ void hz_timer() {
 
 uint16_t parse() {
 
-	 uint16_t instr = data[++registers[PC]];
+	 uint16_t instr = memory[++registers[PC]];
 
 	 if (instr == 0) {
 		
@@ -377,7 +380,6 @@ uint16_t parse() {
 
 }
 
-
 void parser(uint16_t instr) {
 
 	sprintf(cur_instr, "%x", instr); // instr in hex
@@ -390,29 +392,50 @@ void parser(uint16_t instr) {
 	
 	}
 
+	bool flg_z = false;
 	uint16_t f_byte = (instr >> 12) & 0xF;
-	uint8_t reg = (instr >> 8) & 0xF;
-	uint8_t x = str_to_enum(reg);
+	uint16_t reg = (instr >> 8) & 0xF;
+	uint16_t x = str_to_enum((uint16_t)reg);
 	reg = (instr >> 4) & 0xF;
-	uint8_t y = str_to_enum(reg);
-	 
+	uint16_t y = str_to_enum(reg);
+
+
 	switch (instr) {
 
 	case 0x00e0:				// CLEAR THE SCREEEN 
 	{
 
 		clear_screen();
-		
+		flg_z = true;
 	}
 		break;
 
 	case 0x00ee:				// RETURN FROM SUBROUTINE 
 	{
+		uint16_t addr = cur_stack->ret_addr;
 
-		registers[PC] = registers[BP];
+		if (cur_stack->prev)
+			cur_stack = cur_stack->prev;
+
+		else {
+
+			cur_stack = NULL;
+		}
+
+		registers[PC] = addr;
+		flg_z = true;
 
 	}
 		break;
+
+	}
+
+	if (!flg_z & cur_instr[2] == '0') {
+
+		uint16_t addr = instr & 0xFFF;
+		stack_push();
+		cur_stack->ret_addr = registers[PC];
+		registers[PC] = addr;
 
 	}
 
@@ -426,8 +449,8 @@ void parser(uint16_t instr) {
 
 	}
 		break;
-	case 2: {
 
+	case 2: {
 
 		uint16_t mem = instr & 0xFFF;
 		//registers[BP] = registers[PC];
@@ -441,7 +464,7 @@ void parser(uint16_t instr) {
 
 		uint8_t val = instr & 0xFF;
 
-		registers[PC] = (registers[x] == val) ? (registers[PC] + 2 ): (registers[PC]++);
+		registers[PC] = (registers[x] == val) ? (registers[PC] + 1 ): (registers[PC]);
 
 
 	}
@@ -450,14 +473,13 @@ void parser(uint16_t instr) {
 
 		uint8_t val = instr & 0xFF;
 
-		registers[PC] = (registers[x] != val) ? (registers[PC] + 2) : (registers[PC]++);
+		registers[PC] = (registers[x] != val) ? (registers[PC] + 1) : (registers[PC]);
 
 	}
 		break;
 	case 5: {
 
-		registers[PC] = (registers[x] == registers[y]) ? (registers[PC] + 2) : (registers[PC]++);
-
+		registers[PC] = (registers[x] == registers[y]) ? (registers[PC] + 1) : (registers[PC]);
 
 	}
 		break;
@@ -491,7 +513,7 @@ void parser(uint16_t instr) {
 
 		case 0x0: {
 
-			registers[x] = registers[y];
+			registers[x] = (uint8_t)registers[y];
 
 		}
 			break;
@@ -523,7 +545,7 @@ void parser(uint16_t instr) {
 			reg_overflow(x);
 			// CHECKING FOR A CARRY BIT
 			// NEED TO CHANGE 
-			registers[VF] =  (registers[x] >> 8) & 1;
+			registers[VF] = (registers[x] >> 8) & 1;
 
 		}
 			break;
@@ -565,7 +587,7 @@ void parser(uint16_t instr) {
 	case 9: {
 
 		
-		registers[PC] = (registers[x] != registers[y]) ? (registers[PC] + 2) : (registers[PC]++);
+		registers[PC] = (registers[x] != registers[y]) ? (registers[PC] + 1) : (registers[PC]);
 
 
 	}
@@ -697,15 +719,16 @@ void parser(uint16_t instr) {
 			break;
 		case 0x55: {
 
-			uint8_t range = x + 1;
+			uint8_t range = x + 1 ;
 
 
 			for (uint8_t i = 0; i < range; ++i) {
 
 				memory[registers[I]] = registers[i];
-				registers[I] += x + 1;
+				registers[I]++;
 
 			}
+				registers[I] += x + 1;
 
 		}
 			break;
@@ -716,15 +739,15 @@ void parser(uint16_t instr) {
 			for (uint8_t i = 0; i < range; i++) {
 
 				registers[i] = memory[registers[I]];
-				registers[I] += x + 1;
 
 			}
+				registers[I] += x + 1;
 
 		}
 			break;
 		default:
 
-			fprintf(stderr, "No such instruction: %s", instr);
+			fprintf(stderr, "No such instruction: 0x%x\n", instr);
 			break;
 
 			}

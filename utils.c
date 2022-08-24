@@ -49,7 +49,7 @@ uint16_t convert_to_hex(char num) {
 
 	else {
 
-		return num - 'a' + 10;
+		return num - 'A' + 10;
 	}
 
 }

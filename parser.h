@@ -72,10 +72,11 @@ typedef enum {
 	VF,				// FLAG
 	I,
 	PC,
-	BP,
 	R_COUNT
 
 } REGISTERS;
+
+
 
 const static struct {
 
@@ -144,6 +145,6 @@ stack_frame* stack_malloc(const char* text);
 void stack_push();
 uint16_t stack_return();
 
-extern uint16_t data[SIZE_MEM];
+extern uint16_t memory[SIZE_MEM];
 extern uint16_t registers[R_COUNT];
 #endif
