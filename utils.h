@@ -21,5 +21,8 @@ uint16_t little_to_big(uint16_t val);
 uint16_t random_gen();
 uint16_t convert_to_hex(char num);
 bool hex(char* str);
-
+uint8_t asci_hex(unsigned char num);
+void testing();
+uint8_t hex_byte(char* byte);
+void sprite_parse(const char* src);
 #endif

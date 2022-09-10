@@ -274,13 +274,17 @@ void read_data(const char* path, uint8_t argc) {
 
 }
 
-void testing_paint() {
 
-	paint_surf1(3);
+void fetch_byte(uint16_t x) {
+
+	const char* arr = fonts_data[x].data;
+	for (int i = 0; i < 10; i = i + 2) {
+
+		uint8_t num = hex_byte(arr + i);
+		memory[registers[I] + i / 2] = num;
+	}
 
 }
-
-
 
 REGISTERS str_to_enum(uint16_t num) {
 
@@ -364,19 +368,15 @@ void hz_timer() {
 
 }
 
+
 uint16_t parse() {
 
-	 uint16_t instr = memory[++registers[PC]];
-
-	 if (instr == 0) {
-		
-		 printf("ALL INSTR ENDED");
-		 return 0;
-
-	 }
+	 uint16_t instr = memory[registers[PC]];
+	 //paint_sprite(5, 100, 100);
 
 	 parser(instr);
-	 return 1;
+	 registers[PC]++;
+	 return 0;	
 
 }
 
@@ -395,10 +395,9 @@ void parser(uint16_t instr) {
 	bool flg_z = false;
 	uint16_t f_byte = (instr >> 12) & 0xF;
 	uint16_t reg = (instr >> 8) & 0xF;
-	uint16_t x = str_to_enum((uint16_t)reg);
+	REGISTERS x = str_to_enum((uint16_t)reg);
 	reg = (instr >> 4) & 0xF;
-	uint16_t y = str_to_enum(reg);
-
+	REGISTERS y = str_to_enum(reg);
 
 	switch (instr) {
 
@@ -586,9 +585,7 @@ void parser(uint16_t instr) {
 
 	case 9: {
 
-		
 		registers[PC] = (registers[x] != registers[y]) ? (registers[PC] + 1) : (registers[PC]);
-
 
 	}
 		break;
@@ -618,7 +615,7 @@ void parser(uint16_t instr) {
 	case 0xd: {
 
 		uint8_t n = instr & 0xF;
-		paint_surf(x, y, n);
+		paint_sprite(n, x, y);
 
 	}
 		break;
@@ -700,9 +697,9 @@ void parser(uint16_t instr) {
 
 			for (int i = 0; i < FONTS; ++i) {
 
-				if (registers[x] == conversion[i].str[1]) {
+				if (asci_hex(registers[x]) == asci_hex(fonts_data[i].val)) {
 
-					registers[I] = fonts[i];
+					fetch_byte(i);
 
 				}
 
@@ -712,8 +709,10 @@ void parser(uint16_t instr) {
 			break;
 		case 0x33: {
 
+			memory[registers[I]] = (registers[x] % 1000) / 100;
+			memory[registers[I]+1] = (registers[x] % 100) / 10;
+			memory[registers[I] + 2] = (registers[x]) % 10;
 
-	
 
 		}
 			break;

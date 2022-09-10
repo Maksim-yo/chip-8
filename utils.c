@@ -41,17 +41,32 @@ bool hex(char* str) {
 
 }
 
-uint16_t convert_to_hex(char num) {
+uint8_t asci_hex(unsigned char num) {
 
-	if (num <= '9' & num >= '0')
+	if ((num <= '9') & (num >= '0'))
 
 		return num - '0';
+
+	else if ((num >= 'a') & (num <= 'f')) {
+
+		return num - 'a' + 10;
+	}
 
 	else {
 
 		return num - 'A' + 10;
+
 	}
 
+}
+
+uint8_t hex_byte(char* byte) {
+
+	uint8_t num;
+	uint8_t b1 = asci_hex(*(byte+0));
+	uint8_t b2 = asci_hex(*(byte+1));
+	num = b1 << 4 | b2;
+	return num;
 }
 
 

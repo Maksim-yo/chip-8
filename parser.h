@@ -3,6 +3,8 @@
 
 #include "utils.h"
 
+#define BYTES_PER_CHAR 5;
+#define FONT_ADDRESS 0x0;
 #define START_ADDR 200
 #define STACK_DEPTH 19
 #define SIZE_MEM 65556
